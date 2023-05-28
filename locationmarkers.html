@@ -41,7 +41,7 @@
 					<!-- Search bar -->	
 						<div class="col col-md-4 buttons-area">
 							<input type="text" class="form-control" placeholder="Input the name or address of a location" v-model="address">
-							<button class="btn btn btn-primary"><i class="fa fa-search"></i></button>
+							<button class="btn btn btn-primary" @click="makeSearch"><i class="fa fa-search"></i></button>
 						</div>
 					<!-- Local time -->	
 						<div class="col col-md-2">
@@ -105,26 +105,6 @@
 			</div>
 		</div>
 
-		<script>
-			function searchPlaces() {
-			  var searchQuery = document.getElementById('searchInput').value;
-			  var request = {
-				query: searchQuery
-			  };
-		
-			  var service = new google.maps.places.PlacesService(document.createElement('div'));
-		
-			  service.textSearch(request, function(results, status) {
-				if (status === google.maps.places.PlacesServiceStatus.OK) {
-				  var jsonResult = JSON.stringify(results);
-				  console.log(jsonResult);
-				} else {
-				  console.log('Place search failed with status:', status);
-				}
-			  });
-			}
-		  </script>
-		
 		<script type="text/javascript">
 			//Turn off vue production tips
 			Vue.config.productionTip = false
@@ -133,26 +113,63 @@
 				data:{
 					address:"",
 					markerList:[
-						[{ lat: 34.8791806, lng: -111.8265049 }, "Boynton Pass"],
-						[{ lat: 34.8559195, lng: -111.7988186 }, "Airport Mesa"],
-						[{ lat: 34.832149, lng: -111.7695277 }, "Chapel of the Holy Cross"],
-						[{ lat: 34.823736, lng: -111.8001857 }, "Red Rock Crossing"],
-						[{ lat: 34.800326, lng: -111.7665047 }, "Bell Rock"],
+						[{"lat": 43.7482617, "lng": -79.2894414}, "Accuenergy Canada"],
+						[{"lat":39.904211,"lng":116.407395}, "Beijing Accuenergy Technology"],
+						[{"lat":30.5986568,"lng":114.3424844}, "Wuhan University of Technology"],
+						[{"lat":23.0218499,"lng":113.12192}, "China Unicom Foshan Branch"],
+						[{"lat":30.500591,"lng":114.4308863}, "Wuhan Fiberhome Technology"],			
+						[{"lat":14.5581873,"lng":121.0184614}, "Wuhan FiberHome Phils"],
+						[{"lat":43.0095971,"lng":-81.2737336}, "Western University"],
+						[{"lat":43.65378310000001,"lng":-79.3699926}, "Securicore Inc Toronto"],
 					]
 				},
 				methods: {
-					searchAddress(){
+					makeSearch(){
+						//Save vue instance to window object
+						window.vueInstance = this;
+						let geocoder = new google.maps.Geocoder();
+						let currentAddress = window.vueInstance.address;
+						geocoder.geocode({ address: currentAddress }, function(results, status) {
+								if (status === google.maps.GeocoderStatus.OK) {
+									// Get the first place from the response
+									let location = results[0].geometry.location;
+
+									// Get lat and lng
+									let latLng = {
+									lat: location.lat(),
+									lng: location.lng()
+									};
+
+									// return a string
+									let result = [latLng, currentAddress];
+
+									window.vueInstance.markerList.push(result);
+									// let marker = new google.maps.Marker({
+									// 	position: latLng,
+									// 	map: window.initMap,
+									// 	title: currentAddress
+									// });
+									initMap();
+
+								// add marker to the map
+								// marker.setMap(window.initMap);
+
+								} else {
+									console.log("Geocode was not successful for the following reason: " + status);
+								}
+								});
 
 					},
 				},
 				mounted() {
+					
 					//Save vue instance to window object
 					window.vueInstance = this;
 					//Load markerlist on the map
 					function initMap() {
 					const map = new google.maps.Map(document.getElementById("mapCanvas"), {
-						zoom: 6,
-						center: { lat: 34.84555, lng: -111.8035 },
+						zoom: 3,
+						center: { lat: 43.7482617, lng: -79.2894414 },
 					});
 					// Set LatLng and title text for the markers. The first marker (Boynton Pass)
 					// receives the initial focus when tab is pressed. Use arrow keys to
@@ -179,6 +196,14 @@
 						infoWindow.open(marker.getMap(), marker);
 						});
 					});
+					return map;
+
+					// test marker is working----
+					// let newMarker = new google.maps.Marker({
+					// 					position: {"lat":43.0095971,"lng":-81.2737336},
+					// 					map: map,
+					// 					title: "western university"
+					// 				});
 					}
 
 					window.initMap = initMap;
@@ -189,37 +214,37 @@
 		</script>
 		<script>
 			// Get location json
-			const address = "Western University";
-			const apiKey = "AIzaSyAtlqVUt-HzvavwqmiRlwTV0SJp3prHiGE"; 
-			const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+			// const address = "Western University";
+			// const apiKey = "AIzaSyAtlqVUt-HzvavwqmiRlwTV0SJp3prHiGE"; 
+			// const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
 
-			const xhr = new XMLHttpRequest();
-			xhr.open("GET", url, true);
-			xhr.onreadystatechange = function() {
-			if (xhr.readyState === 4 && xhr.status === 200) {
-				const data = JSON.parse(xhr.responseText);
-				console.log(data);
-			}
-			};
-			xhr.send();
+			// const xhr = new XMLHttpRequest();
+			// xhr.open("GET", url, true);
+			// xhr.onreadystatechange = function() {
+			// if (xhr.readyState === 4 && xhr.status === 200) {
+			// 	const data = JSON.parse(xhr.responseText);
+			// 	console.log(data);
+			// }
+			// };
+			// xhr.send();
 
 
 			// get time zone
-			const latitude = 37.7749; 
-			const longitude = -122.4194; 
-			const timestamp = Math.floor(Date.now() / 1000);
+			// const latitude = 37.7749; 
+			// const longitude = -122.4194; 
+			// const timestamp = Math.floor(Date.now() / 1000);
 
-			const url2 = `https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=${timestamp}&key=${apiKey}`;
+			// const url2 = `https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=${timestamp}&key=${apiKey}`;
 
-			const xhr2 = new XMLHttpRequest();
-			xhr2.open("GET", url2, true);
-			xhr2.onreadystatechange = function() {
-			if (xhr2.readyState === 4 && xhr2.status === 200) {
-				const data = JSON.parse(xhr2.responseText);
-				console.log(data);
-			}
-			};
-			xhr2.send();
+			// const xhr2 = new XMLHttpRequest();
+			// xhr2.open("GET", url2, true);
+			// xhr2.onreadystatechange = function() {
+			// if (xhr2.readyState === 4 && xhr2.status === 200) {
+			// 	const data = JSON.parse(xhr2.responseText);
+			// 	console.log(data);
+			// }
+			// };
+			// xhr2.send();
 
 		</script>
 		<style>
