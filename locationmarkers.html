@@ -3,7 +3,10 @@
 	<head>
 		<meta charset="UTF-8" />
 		<title>LocationMarkers</title>
+		<!-- Include Vuejs -->
 		<script type="text/javascript" src="./js/vue.js"></script>
+		<!-- Include dayjs -->
+		<script type="text/javascript" src="./js/dayjs.min.js"></script>
 		<!-- Include Bootstrap via CDN -->
 		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
 		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
@@ -35,18 +38,18 @@
 					<!--Time zone -->
 						<div class="col col-md-2">
 							<div class="badge-area-left">
-								<i class="fas fa-globe-americas"></i><span class="badge bg-secondary">Pacific Daylight Time</span>
+								<i class="fas fa-globe-americas"></i><span class="badge bg-secondary">{{timeZone}}</span>
 							</div>
 						</div>
 					<!-- Search bar -->	
 						<div class="col col-md-4 buttons-area">
-							<input type="text" class="form-control" placeholder="Input the name or address of a location" v-model="address">
+							<input type="text" class="form-control" placeholder="Input the name or address of a location" @keydown.enter="makeSearch" v-model="address">
 							<button class="btn btn btn-primary" @click="makeSearch"><i class="fa fa-search"></i></button>
 						</div>
 					<!-- Local time -->	
 						<div class="col col-md-2">
 							<div class="badge-area-right">
-								<i class="far fa-clock"></i><span class="badge bg-secondary">11:41</span>
+								<i class="far fa-clock"></i><span class="badge bg-secondary">{{getLocalTime}}</span>
 							</div>
 						</div>
 					<!-- Pagination -->
@@ -76,7 +79,7 @@
 				<table class="table table-hover text-nowrap">
 					<thead>
 						<tr>
-							<th><input type="checkbox">Select All</th>
+							<th><input type="checkbox"> Select All</th>
 							<th><input type="checkbox"></th>
 							<th><input type="checkbox"></th>
 							<th><input type="checkbox"></th>
@@ -112,6 +115,9 @@
 				el:'#root',
 				data:{
 					address:"",
+					timeZone:"(Time Zone Name)",
+					currentTime:"(Local Current Time)",
+					lastestSearchTimeOffset: 0,
 					markerList:[
 						[{"lat": 43.7482617, "lng": -79.2894414}, "Accuenergy Canada"],
 						[{"lat":39.904211,"lng":116.407395}, "Beijing Accuenergy Technology"],
@@ -122,6 +128,14 @@
 						[{"lat":43.0095971,"lng":-81.2737336}, "Western University"],
 						[{"lat":43.65378310000001,"lng":-79.3699926}, "Securicore Inc Toronto"],
 					]
+				},
+				computed:{
+					getLocalTime(){
+						let myTime = Date.now();
+						this.currentTime = myTime + this.lastestSearchTimeOffset;
+						let formattedTime = dayjs(this.currentTime).format('HH:mm:ss');
+						return formattedTime;
+					}
 				},
 				methods: {
 					makeSearch(){
@@ -150,9 +164,8 @@
 									// 	title: currentAddress
 									// });
 									initMap();
-
-								// add marker to the map
-								// marker.setMap(window.initMap);
+									window.vueInstance.getTimeZone();
+									
 
 								} else {
 									console.log("Geocode was not successful for the following reason: " + status);
@@ -170,15 +183,15 @@
 						}
 
 						function successCallback(position) {
-						var latitude = position.coords.latitude;
-						var longitude = position.coords.longitude;
+						let latitude = position.coords.latitude;
+						let longitude = position.coords.longitude;
 						let latLng = {
 									lat: latitude,
 									lng: longitude
 									};
 						let result = [latLng, "Your Current Location"];
-						// Add your current location to the first place and add marker onto the map 
-									window.vueInstance.markerList.unshift(result);
+						// Add your current location to the table and add marker onto the map 
+									window.vueInstance.markerList.push(result);
 									initMap();
 						
 						}
@@ -188,8 +201,36 @@
 						}
 
 
+						},
+						getTimeZone() {
+						//Save vue instance to window object
+						window.vueInstance = this;
+						let lastestSearch = window.vueInstance.markerList;
+						// console.log(lastestSearch[lastestSearch.length-1][0].lat);
+						const latitude = lastestSearch[lastestSearch.length-1][0].lat; 
+						const longitude = lastestSearch[lastestSearch.length-1][0].lng; 
+						const timestamp = Math.floor(Date.now() / 1000);
+						const apiKey = "AIzaSyAtlqVUt-HzvavwqmiRlwTV0SJp3prHiGE"; 
+
+						const url2 = `https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=${timestamp}&key=${apiKey}`;
+
+						const xhr2 = new XMLHttpRequest();
+						xhr2.open("GET", url2, true);
+						xhr2.onreadystatechange = function() {
+						if (xhr2.readyState === 4 && xhr2.status === 200) {
+							const data = JSON.parse(xhr2.responseText);
+							console.log(data);
+							//Show time zone name in the badge
+							window.vueInstance.timeZone = data.timeZoneName;
+							//Save time offset of the latest search for local time computing
+							window.vueInstance.lastestSearchTimeOffset = data.dstOffset + data.rawOffset;
 						}
+						};
+						xhr2.send();
+						},
 				},
+				
+					
 				mounted() {
 					
 					//Save vue instance to window object
@@ -236,7 +277,7 @@
 					}
 
 					window.initMap = initMap;
-
+					
 
 				},
 			})
@@ -258,22 +299,7 @@
 			// xhr.send();
 
 
-			// get time zone
-			// const latitude = 37.7749; 
-			// const longitude = -122.4194; 
-			// const timestamp = Math.floor(Date.now() / 1000);
 
-			// const url2 = `https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=${timestamp}&key=${apiKey}`;
-
-			// const xhr2 = new XMLHttpRequest();
-			// xhr2.open("GET", url2, true);
-			// xhr2.onreadystatechange = function() {
-			// if (xhr2.readyState === 4 && xhr2.status === 200) {
-			// 	const data = JSON.parse(xhr2.responseText);
-			// 	console.log(data);
-			// }
-			// };
-			// xhr2.send();
 
 		</script>
 		<style>
@@ -303,6 +329,9 @@
 			#mapCanvas{
 				height:65vh;margin:0 1%;
 				border-radius: 0.0375rem;
+			}
+			#location-button{
+				width: 40px;
 			}
 		</style>
 
