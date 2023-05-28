@@ -30,7 +30,7 @@
 					<!-- Delete and acquire location button -->
 						<div class="col col-md-2 buttons-area">
 							<button class="btn btn btn-danger"><span class="glyphicon glyphicon-trash"></span><i class="fa fa-trash"></i></button>
-							<button class="btn btn btn-secondary" id="location-button"><i class="fas fa-map-marker-alt"></i></button>
+							<button class="btn btn btn-secondary" id="location-button" @click="getCurrentLocation"><i class="fas fa-map-marker-alt"></i></button>
 						</div>
 					<!--Time zone -->
 						<div class="col col-md-2">
@@ -93,7 +93,7 @@
 							<th v-for="(a,index) of markerList" :key="index">{{index+1}}</th>
 						</tr>
 						<tr>
-							<th>Name or Address</th>
+							<th>Place</th>
 							<th v-for="(a,index) of markerList" :key="index">{{a[1]}}</th>
 						</tr>
 					</thead>
@@ -160,6 +160,35 @@
 								});
 
 					},
+					getCurrentLocation(){
+						window.vueInstance = this;
+						if (navigator.geolocation) {
+						// current location exists
+						navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
+						} else {
+						console.log('Can not get current location');
+						}
+
+						function successCallback(position) {
+						var latitude = position.coords.latitude;
+						var longitude = position.coords.longitude;
+						let latLng = {
+									lat: latitude,
+									lng: longitude
+									};
+						let result = [latLng, "Your Current Location"];
+						// Add your current location to the first place and add marker onto the map 
+									window.vueInstance.markerList.unshift(result);
+									initMap();
+						
+						}
+
+						function errorCallback(error) {
+						console.log('Can not get current location', error.message);
+						}
+
+
+						}
 				},
 				mounted() {
 					
