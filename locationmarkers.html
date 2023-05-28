@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>LocationMarkers</title>
+		<script type="text/javascript" src="./js/vue.js"></script>
+		<!-- Include Bootstrap via CDN -->
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+		<!-- Include FontAwesome via CDN -->
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+		<!-- Import Google Map API with my key -->
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?callback=initMap&key=AIzaSyAtlqVUt-HzvavwqmiRlwTV0SJp3prHiGE" defer></script>
+	</head>
+	<body>
+		
+		<div id="root">
+
+			
+			
+			<!-- Div for google map -->
+			<div id="mapCanvas">
+
+			</div>
+
+			<div class="card">
+			<!-- Div for header -->
+			<div class="card-header">
+				<div class="row">
+					<!-- Delete and acquire location button -->
+						<div class="col col-md-2 buttons-area">
+							<button class="btn btn btn-danger"><span class="glyphicon glyphicon-trash"></span><i class="fa fa-trash"></i></button>
+							<button class="btn btn btn-secondary" id="location-button"><i class="fas fa-map-marker-alt"></i></button>
+						</div>
+					<!--Time zone -->
+						<div class="col col-md-2">
+							<div class="badge-area-left">
+								<i class="fas fa-globe-americas"></i><span class="badge bg-secondary">Pacific Daylight Time</span>
+							</div>
+						</div>
+					<!-- Search bar -->	
+						<div class="col col-md-4 buttons-area">
+							<input type="text" class="form-control" placeholder="Input the name or address of a location" v-model="address">
+							<button class="btn btn btn-primary"><i class="fa fa-search"></i></button>
+						</div>
+					<!-- Local time -->	
+						<div class="col col-md-2">
+							<div class="badge-area-right">
+								<i class="far fa-clock"></i><span class="badge bg-secondary">11:41</span>
+							</div>
+						</div>
+					<!-- Pagination -->
+					<div class="col col-md-2">
+						<nav class="pagination-nav" aria-label="Page navigation example">
+							<ul class="pagination justify-content-end" >
+							<li class="page-item">
+								<a class="page-link" href="#" aria-label="Previous">
+								<span aria-hidden="true">&laquo;</span>
+								</a>
+							</li>
+							<li class="page-item"><a class="page-link" href="#">1</a></li>
+							<li class="page-item"><a class="page-link" href="#">2</a></li>
+							<li class="page-item"><a class="page-link" href="#">3</a></li>
+							<li class="page-item">
+								<a class="page-link" href="#" aria-label="Next">
+								<span aria-hidden="true">&raquo;</span>
+								</a>
+							</li>
+							</ul>
+						</nav>
+					</div>
+				</div>
+			</div>
+			<div class="card-body">
+				<!-- Table for address list -->
+				<table class="table table-hover text-nowrap">
+					<thead>
+						<tr>
+							<th><input type="checkbox">Select All</th>
+							<th><input type="checkbox"></th>
+							<th><input type="checkbox"></th>
+							<th><input type="checkbox"></th>
+							<th><input type="checkbox"></th>
+							<th><input type="checkbox"></th>
+							<th><input type="checkbox"></th>
+							<th><input type="checkbox"></th>
+							<th><input type="checkbox"></th>
+							<th><input type="checkbox"></th>
+							<th><input type="checkbox"></th>
+						</tr>
+						<tr>
+							<th>Index</th>
+							<th v-for="(a,index) of markerList" :key="index">{{index+1}}</th>
+						</tr>
+						<tr>
+							<th>Name or Address</th>
+							<th v-for="(a,index) of markerList" :key="index">{{a[1]}}</th>
+						</tr>
+					</thead>
+
+				</table>
+			</div>
+			
+			</div>
+			</div>
+		</div>
+
+		<script>
+			function searchPlaces() {
+			  var searchQuery = document.getElementById('searchInput').value;
+			  var request = {
+				query: searchQuery
+			  };
+		
+			  var service = new google.maps.places.PlacesService(document.createElement('div'));
+		
+			  service.textSearch(request, function(results, status) {
+				if (status === google.maps.places.PlacesServiceStatus.OK) {
+				  var jsonResult = JSON.stringify(results);
+				  console.log(jsonResult);
+				} else {
+				  console.log('Place search failed with status:', status);
+				}
+			  });
+			}
+		  </script>
+		
+		<script type="text/javascript">
+			//Turn off vue production tips
+			Vue.config.productionTip = false
+			new Vue({
+				el:'#root',
+				data:{
+					address:"",
+					markerList:[
+						[{ lat: 34.8791806, lng: -111.8265049 }, "Boynton Pass"],
+						[{ lat: 34.8559195, lng: -111.7988186 }, "Airport Mesa"],
+						[{ lat: 34.832149, lng: -111.7695277 }, "Chapel of the Holy Cross"],
+						[{ lat: 34.823736, lng: -111.8001857 }, "Red Rock Crossing"],
+						[{ lat: 34.800326, lng: -111.7665047 }, "Bell Rock"],
+					]
+				},
+				methods: {
+					searchAddress(){
+
+					},
+				},
+				mounted() {
+					//Save vue instance to window object
+					window.vueInstance = this;
+					//Load markerlist on the map
+					function initMap() {
+					const map = new google.maps.Map(document.getElementById("mapCanvas"), {
+						zoom: 6,
+						center: { lat: 34.84555, lng: -111.8035 },
+					});
+					// Set LatLng and title text for the markers. The first marker (Boynton Pass)
+					// receives the initial focus when tab is pressed. Use arrow keys to
+					// move between markers; press tab again to cycle through the map controls.
+					const markers = vueInstance.markerList;
+					// Create an info window to share between markers.
+					const infoWindow = new google.maps.InfoWindow();
+
+					// Create the markers.
+					markers.forEach(([position, title], i) => {
+						const marker = new google.maps.Marker({
+						position,
+						map,
+						title: `${i + 1}. ${title}`,
+						label: {text:`${i + 1}`, color:"white"},
+						// icon:'images/accu1.png',
+						optimized: false,
+						});
+
+						// Add a click listener for each marker, and set up the info window.
+						marker.addListener("click", () => {
+						infoWindow.close();
+						infoWindow.setContent(marker.getTitle());
+						infoWindow.open(marker.getMap(), marker);
+						});
+					});
+					}
+
+					window.initMap = initMap;
+
+
+				},
+			})
+		</script>
+		<script>
+			// Get location json
+			const address = "Western University";
+			const apiKey = "AIzaSyAtlqVUt-HzvavwqmiRlwTV0SJp3prHiGE"; 
+			const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
+
+			const xhr = new XMLHttpRequest();
+			xhr.open("GET", url, true);
+			xhr.onreadystatechange = function() {
+			if (xhr.readyState === 4 && xhr.status === 200) {
+				const data = JSON.parse(xhr.responseText);
+				console.log(data);
+			}
+			};
+			xhr.send();
+
+
+			// get time zone
+			const latitude = 37.7749; 
+			const longitude = -122.4194; 
+			const timestamp = Math.floor(Date.now() / 1000);
+
+			const url2 = `https://maps.googleapis.com/maps/api/timezone/json?location=${latitude},${longitude}&timestamp=${timestamp}&key=${apiKey}`;
+
+			const xhr2 = new XMLHttpRequest();
+			xhr2.open("GET", url2, true);
+			xhr2.onreadystatechange = function() {
+			if (xhr2.readyState === 4 && xhr2.status === 200) {
+				const data = JSON.parse(xhr2.responseText);
+				console.log(data);
+			}
+			};
+			xhr2.send();
+
+		</script>
+		<style>
+			.buttons-area{
+				display:flex;
+				margin:auto;
+			}
+			.pagination-nav{
+				margin-top:8px;
+			}
+			.badge-area-left{
+				margin-top:19px;
+			}
+			.badge-area-right{
+				margin-top:19px;
+				float:right;
+			}
+			.bg-secondary{
+				margin-left:2px;
+			}
+			.card{
+				margin:1% 1% 0 1%;
+			}
+			#location-button{
+				margin-left: 5px;
+			}
+			#mapCanvas{
+				height:65vh;margin:0 1%;
+				border-radius: 0.0375rem;
+			}
+		</style>
+
+		
+</html>
