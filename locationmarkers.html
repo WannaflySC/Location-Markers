@@ -102,6 +102,14 @@
 					</thead>
 
 				</table>
+			<!-- Tooltip for errors -->
+				<div v-if="error" class="error-modal">
+					<div class="error-modal__content">
+					  <h2>Error</h2>
+					  <p>{{ error }}</p>
+					  <button class="btn btn-danger" @click="closeErrorModal"><i class="fas fa-times"></i></button>
+					</div>
+				  </div>
 			</div>
 			
 			</div>
@@ -118,7 +126,7 @@
 					timeZone:"(Time Zone Name)",
 					currentTime:"(Local Current Time)",
 					markerList:[
-						[{"lat": 43.7482617, "lng": -79.2894414}, "Accuenergy Canada"],
+						[{"lat": 43.7482617, "lng": -79.2894414}, "Accuenergy 22 howden road"],
 						[{"lat":39.904211,"lng":116.407395}, "Beijing Accuenergy Technology"],
 						[{"lat":30.5986568,"lng":114.3424844}, "Wuhan University of Technology"],
 						[{"lat":23.0218499,"lng":113.12192}, "China Unicom Foshan Branch"],
@@ -126,7 +134,8 @@
 						[{"lat":14.5581873,"lng":121.0184614}, "Wuhan FiberHome Phils"],
 						[{"lat":43.0095971,"lng":-81.2737336}, "Western University"],
 						[{"lat":43.65378310000001,"lng":-79.3699926}, "Securicore Inc Toronto"],
-					]
+					],
+					error:null,
 				},
 				methods: {
 					makeSearch(){
@@ -160,7 +169,8 @@
 									
 
 								} else {
-									console.log("Geocode was not successful for the following reason: " + status);
+									window.vueInstance.showErrorModal( status + " ***Please input a more detailed name or address***");
+									// console.log("Geocode was not successful for the following reason: " + status);
 								}
 								});
 
@@ -171,7 +181,8 @@
 						// current location exists
 						navigator.geolocation.getCurrentPosition(successCallback, errorCallback);
 						} else {
-						console.log('Can not get current location');
+							window.vueInstance.showErrorModal("Can not get your current location");
+						// console.log('Can not get current location');
 						}
 
 						function successCallback(position) {
@@ -189,7 +200,8 @@
 						}
 
 						function errorCallback(error) {
-						console.log('Can not get current location', error.message);
+							window.vueInstance.showErrorModal("Can not get your current location");
+						// console.log('Can not get current location', error.message);
 						}
 
 
@@ -211,7 +223,7 @@
 						xhr2.onreadystatechange = function() {
 						if (xhr2.readyState === 4 && xhr2.status === 200) {
 							const data = JSON.parse(xhr2.responseText);
-							console.log(data);
+							// console.log(data);
 							//Show time zone name in the badge
 							window.vueInstance.timeZone = data.timeZoneName;
 							//Save time offset of the latest search for local time computing
@@ -234,6 +246,13 @@
 						};
 						xhr2.send();
 						},
+
+						showErrorModal(errorMessage) {
+							this.error = errorMessage;
+							},
+						closeErrorModal() {
+						this.error = null;
+						}
 					
 				},
 				
@@ -316,6 +335,34 @@
 			}
 			#location-button{
 				width: 40px;
+			}
+
+
+			.error-modal {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background-color: rgba(0, 0, 0, 0.5);
+			}
+
+			.error-modal__content {
+			background-color: #fff;
+			padding: 20px;
+			border-radius: 5px;
+			text-align: center;
+			}
+
+			.error-modal__content h2 {
+			margin-top: 0;
+			}
+
+			.error-modal__content p {
+			margin-bottom: 20px;
 			}
 		</style>
 
