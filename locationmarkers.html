@@ -49,7 +49,7 @@
 					<!-- Local time -->	
 						<div class="col col-md-2">
 							<div class="badge-area-right">
-								<i class="far fa-clock"></i><span class="badge bg-secondary">{{getLocalTime}}</span>
+								<i class="far fa-clock"></i><span class="badge bg-secondary">{{currentTime}}</span>
 							</div>
 						</div>
 					<!-- Pagination -->
@@ -117,7 +117,6 @@
 					address:"",
 					timeZone:"(Time Zone Name)",
 					currentTime:"(Local Current Time)",
-					lastestSearchTimeOffset: 0,
 					markerList:[
 						[{"lat": 43.7482617, "lng": -79.2894414}, "Accuenergy Canada"],
 						[{"lat":39.904211,"lng":116.407395}, "Beijing Accuenergy Technology"],
@@ -128,14 +127,6 @@
 						[{"lat":43.0095971,"lng":-81.2737336}, "Western University"],
 						[{"lat":43.65378310000001,"lng":-79.3699926}, "Securicore Inc Toronto"],
 					]
-				},
-				computed:{
-					getLocalTime(){
-						let myTime = Date.now();
-						this.currentTime = myTime + this.lastestSearchTimeOffset;
-						let formattedTime = dayjs(this.currentTime).format('HH:mm:ss');
-						return formattedTime;
-					}
 				},
 				methods: {
 					makeSearch(){
@@ -165,6 +156,7 @@
 									// });
 									initMap();
 									window.vueInstance.getTimeZone();
+									// window.vueInstance.getLocalTime();
 									
 
 								} else {
@@ -223,11 +215,26 @@
 							//Show time zone name in the badge
 							window.vueInstance.timeZone = data.timeZoneName;
 							//Save time offset of the latest search for local time computing
-							window.vueInstance.lastestSearchTimeOffset = data.dstOffset + data.rawOffset;
+							// This offset is by second
+							let totalOffset = (data.dstOffset + data.rawOffset)*1000;
+							let d = new Date();
+							let myTime = d.getTime();
+							// This offset is by minute
+							let myOffset = d.getTimezoneOffset()*60000; 
+							// Calculate UTC time by my time and my offset 
+							let utc = myTime + myOffset;
+							// Calculate the local time of the lastest searched place 
+							let localTimeStamp = utc + totalOffset;
+							let localTime = new Date(localTimeStamp);
+							let formattedTime = dayjs(localTime).format('MM/DD/YYYY HH:mm');
+						
+
+							window.vueInstance.currentTime = formattedTime;
 						}
 						};
 						xhr2.send();
 						},
+					
 				},
 				
 					
@@ -268,40 +275,17 @@
 					});
 					return map;
 
-					// test marker is working----
-					// let newMarker = new google.maps.Marker({
-					// 					position: {"lat":43.0095971,"lng":-81.2737336},
-					// 					map: map,
-					// 					title: "western university"
-					// 				});
 					}
 
 					window.initMap = initMap;
+
 					
+									
 
 				},
 			})
 		</script>
-		<script>
-			// Get location json
-			// const address = "Western University";
-			// const apiKey = "AIzaSyAtlqVUt-HzvavwqmiRlwTV0SJp3prHiGE"; 
-			// const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}`;
-
-			// const xhr = new XMLHttpRequest();
-			// xhr.open("GET", url, true);
-			// xhr.onreadystatechange = function() {
-			// if (xhr.readyState === 4 && xhr.status === 200) {
-			// 	const data = JSON.parse(xhr.responseText);
-			// 	console.log(data);
-			// }
-			// };
-			// xhr.send();
-
-
-
-
-		</script>
+	
 		<style>
 			.buttons-area{
 				display:flex;
