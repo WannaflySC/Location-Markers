@@ -1,5 +1,5 @@
 # Location-Markers
-A small web app that search places and show them on google map
+A small web app, you can search places and show them on google map
 
 Packages:
 1. Based on Vue.js and Google Maps API
@@ -11,3 +11,4 @@ Functions:
 3. Show the timezone name and current local time for the latest search
 4. Delete Multiple locations at a time
 5. Pagination - every page shows at most 10 records
+6. Error tooltips for search errors or get current location errors
